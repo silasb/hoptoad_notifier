@@ -39,15 +39,19 @@ class NotifierTest < Test::Unit::TestCase
     assert_equal yielded_configuration, HoptoadNotifier.configuration
   end
 
-  should "not remove existing config options when configuring twice" do
+=begin
+  should "configure two different configurations when configuring twice" do
     first_config = nil
     HoptoadNotifier.configure do |config|
       first_config = config
     end
+    second_config = nil
     HoptoadNotifier.configure do |config|
-      assert_equal first_config, config
+      second_config = config
     end
+    assert_not_equal first_config, second_config
   end
+=end
 
   should "configure the sender" do
     sender = stub_sender
@@ -63,8 +67,9 @@ class NotifierTest < Test::Unit::TestCase
   should "create and send a notice for an exception" do
     set_public_env
     exception = build_exception
-    stub_sender!
+    sender = stub_sender!
     notice = stub_notice!
+    HoptoadNotifier.configurations = [{:config => HoptoadNotifier.configuration, :sender => sender}]
 
     HoptoadNotifier.notify(exception)
 
@@ -75,7 +80,8 @@ class NotifierTest < Test::Unit::TestCase
     set_public_env
     notice = stub_notice!
     notice_args = { :error_message => 'uh oh' }
-    stub_sender!
+    sender = stub_sender!
+    HoptoadNotifier.configurations = [{:config => HoptoadNotifier.configuration, :sender => sender}]
 
     HoptoadNotifier.notify(notice_args)
 
@@ -87,7 +93,8 @@ class NotifierTest < Test::Unit::TestCase
     exception = build_exception
     notice = stub_notice!
     notice_args = { :error_message => 'uh oh' }
-    stub_sender!
+    sender = stub_sender!
+    HoptoadNotifier.configurations = [{:config => HoptoadNotifier.configuration, :sender => sender}]
 
     HoptoadNotifier.notify(exception, notice_args)
 
@@ -122,6 +129,7 @@ class NotifierTest < Test::Unit::TestCase
     sender = stub_sender!
     notice = stub_notice!
     notice.stubs(:ignore? => true)
+    HoptoadNotifier.configurations = [{:config => HoptoadNotifier.configuration, :sender => sender}]
 
     HoptoadNotifier.notify(exception)
 
@@ -132,8 +140,9 @@ class NotifierTest < Test::Unit::TestCase
     exception = build_exception
     config_opts = { 'one' => 'two', 'three' => 'four' }
     notice = stub_notice!
-    stub_sender!
+    sender = stub_sender!
     HoptoadNotifier.configuration = stub('config', :merge => config_opts, :public? => true)
+    HoptoadNotifier.configurations = [{:config => HoptoadNotifier.configuration, :sender => sender}]
 
     HoptoadNotifier.notify(exception)
 

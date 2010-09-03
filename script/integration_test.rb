@@ -16,7 +16,10 @@ fail "Please supply an API Key as the first argument" if ARGV.empty?
 host = ARGV[1]
 host ||= "hoptoadapp.com"
 
-secure = (ARGV[2] == "secure")
+port = ARGV[2]
+port ||= 80
+
+secure = (ARGV[3] == "secure")
 
 exception = begin
               raise "Testing hoptoad notifier with secure = #{secure}. If you can see this, it works."
@@ -28,6 +31,7 @@ HoptoadNotifier.configure do |config|
   config.secure  = secure
   config.host    = host
   config.api_key = ARGV.first
+  config.port    = port
 end
 puts "Configuration:"
 HoptoadNotifier.configuration.to_hash.each do |key, value|

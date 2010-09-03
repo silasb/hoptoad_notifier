@@ -22,7 +22,12 @@ module HoptoadNotifier
     'Accept'                   => 'text/xml, application/xml'
   }
 
+  @configurations = []
+
   class << self
+    # Holds all the configurations
+    attr_accessor :configurations
+
     # The sender object is responsible for delivering formatted data to the Hoptoad server.
     # Must respond to #send_to_hoptoad. See HoptoadNotifier::Sender.
     attr_accessor :sender
@@ -63,6 +68,11 @@ module HoptoadNotifier
       self.configuration.logger
     end
 
+    def base_configure
+      self.configuration = Configuration.new
+      yield(configuration)
+    end
+
     # Call this method to modify defaults in your initializers.
     #
     # @example
@@ -70,10 +80,20 @@ module HoptoadNotifier
     #     config.api_key = '1234567890abcdef'
     #     config.secure  = false
     #   end
-    def configure(silent = false)
+    def configure(silent = false, &block)
       self.configuration ||= Configuration.new
-      yield(configuration)
-      self.sender = Sender.new(configuration)
+      case block.arity
+      when 1
+        yield(configuration)
+        self.sender = Sender.new(configuration)
+        @configurations << {:config => self.configuration, :sender => self.sender}
+      when 2
+        config1 = self.configuration
+        config2 = self.base_configuration.clone
+        yield(config1, config2)
+        @configurations << {:config => config1, :sender => Sender.new(config1)}
+        @configurations << {:config => config2, :sender => Sender.new(config2)}
+      end
       report_ready unless silent
     end
 
@@ -89,14 +109,26 @@ module HoptoadNotifier
     # @option opts [String] :session The contents of the user's session.
     # @option opts [String] :environment ENV merged with the contents of the request's environment.
     def notify(exception, opts = {})
-      send_notice(build_notice_for(exception, opts))
+      for_all_configurations do
+        send_notice(build_notice_for(exception, opts))
+      end
     end
 
     # Sends the notice unless it is one of the default ignored exceptions
     # @see HoptoadNotifier.notify
     def notify_or_ignore(exception, opts = {})
-      notice = build_notice_for(exception, opts)
-      send_notice(notice) unless notice.ignore?
+   #   setup_configuration do
+        notice = build_notice_for(exception, opts)
+        send_notice(notice) unless notice.ignore?
+   #   end
+    end
+
+    def for_all_configurations
+      @configurations.each do |config|
+        self.configuration = config[:config]
+        self.sender = config[:sender]
+        yield
+      end
     end
 
     def build_lookup_hash_for(exception, options = {})

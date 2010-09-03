@@ -119,6 +119,7 @@ class Test::Unit::TestCase
 
   def reset_config
     HoptoadNotifier.configuration = nil
+    HoptoadNotifier.configurations = []
     HoptoadNotifier.configure do |config|
       config.api_key = 'abc123'
     end

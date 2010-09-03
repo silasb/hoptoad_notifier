@@ -8,6 +8,7 @@ class ActionControllerCatcherTest < Test::Unit::TestCase
     super
     reset_config
     HoptoadNotifier.sender = CollectingSender.new
+    HoptoadNotifier.configurations = [{:config => HoptoadNotifier.configuration, :sender => HoptoadNotifier.sender}]
     define_constant('RAILS_ROOT', '/path/to/rails/root')
   end
 
