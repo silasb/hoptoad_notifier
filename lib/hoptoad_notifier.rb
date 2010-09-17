@@ -89,7 +89,7 @@ module HoptoadNotifier
         @configurations << {:config => self.configuration, :sender => self.sender}
       when 2
         config1 = self.configuration
-        config2 = self.base_configuration.clone
+        config2 = self.configuration.clone
         yield(config1, config2)
         @configurations << {:config => config1, :sender => Sender.new(config1)}
         @configurations << {:config => config2, :sender => Sender.new(config2)}
