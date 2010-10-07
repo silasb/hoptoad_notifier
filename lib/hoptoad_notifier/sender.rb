@@ -46,6 +46,7 @@ module HoptoadNotifier
       else
         log :error, "Failure: #{response.class}", response
       end
+      response
     end
 
     private

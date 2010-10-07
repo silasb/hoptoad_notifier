@@ -120,8 +120,9 @@ module HoptoadNotifier
 
     def send_notice(notice)
       if configuration.public?
-        sender.send_to_hoptoad(notice.to_xml)
+        response = sender.send_to_hoptoad(notice.to_xml)
       end
+      Hook.after_send_notice(response, notice.to_xml)
     end
 
     def build_notice_for(exception, opts = {})
